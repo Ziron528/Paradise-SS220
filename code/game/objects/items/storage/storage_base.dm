@@ -51,12 +51,29 @@
 	// Allow storage items of the same size to be put inside
 	var/allow_same_size = FALSE
 
+	/// Set by deserialize() below - lets Initialize() tell "not loaded from
+	/// saved data yet" apart from "loaded, and correctly ended up empty"
+	/// (both look like an empty `contents` otherwise).
+	var/deserialized = FALSE
+
 /obj/item/storage/Initialize(mapload)
 	. = ..()
 	can_hold = typecacheof(can_hold)
 	cant_hold = typecacheof(cant_hold) - typecacheof(cant_hold_override)
 
-	populate_contents()
+	// `deserialize()` (below) can run either before or after Initialize() -
+	// the order isn't consistent between mapload spawns (see the same race
+	// already fixed in suit_storage.dm). If deserialize() already ran,
+	// DON'T also run populate_contents() here - it unconditionally spawns a
+	// fresh default set of items regardless of what deserialize() decided.
+	// A plain `!length(contents)` check isn't enough: it can't tell "not
+	// deserialized yet" apart from "deserialized, and correctly ended up
+	// empty" (e.g. a weapon sheath that was genuinely empty when saved) -
+	// both look like an empty contents list. Track whether deserialize()
+	// actually ran instead, so a legitimately-empty loaded container stays
+	// empty instead of getting a fresh default item spawned into it.
+	if(!deserialized && !length(contents))
+		populate_contents()
 
 	boxes = new /atom/movable/screen/storage()
 	boxes.name = "storage"
@@ -761,6 +778,7 @@
 	return data
 
 /obj/item/storage/deserialize(list/data)
+	deserialized = TRUE
 	if(isnum(data["slots"]))
 		storage_slots = data["slots"]
 	if(isnum(data["max_w_class"]))

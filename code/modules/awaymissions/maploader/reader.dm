@@ -162,6 +162,17 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 			CHECK_TICK
 	catch(var/exception/e)
 		GLOB._preloader.reset()
+		// `dmmRegex` is `static` - shared across every load_map() call in the
+		// whole codebase (see dmm_suite.dm). Throwing out of the middle of
+		// the `while(dmmRegex.Find(...))` loop above (rather than letting a
+		// Find() call finish and advance cleanly) can leave its internal
+		// match state stuck mid-search. The very next, unrelated load_map()
+		// call then reuses that same corrupted regex object and can silently
+		// skip/mismatch model definitions - this is exactly the
+		// "Coords before model definition in DMM" failure seen on a second
+		// load attempt right after a first one that threw. Recreate it so
+		// the next call starts clean.
+		dmmRegex = new/regex({""(\[a-zA-Z]+)" = \\(((?:.|\n)*?)\\)\n(?!\t)|\\((\\d+),(\\d+),(\\d+)\\) = \\{"(\[a-zA-Z\n]*)"\\}"}, "g")
 		throw e
 
 	GLOB._preloader.reset()
@@ -336,7 +347,19 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 				instance = new path(T) // first preloader pass
 
 	if(GLOB.use_preloader && instance) // second preloader pass, for those atoms that don't ..() in New()
-		GLOB._preloader.load(instance)
+		// A single bad atom's saved data (e.g. corrupt/incompatible
+		// deserialize() data) used to be able to throw an exception all the
+		// way up through the whole load_map() loop, silently aborting the
+		// ENTIRE rest of the map load - every turf/obj/decal after the bad
+		// one in iteration order would simply never get instantiated. That's
+		// the "only half the map's decals loaded" symptom. Isolate each
+		// atom's preloader pass instead: log and move on to the next atom,
+		// don't let one bad object take the whole map down with it.
+		try
+			GLOB._preloader.load(instance)
+		catch(var/exception/e)
+			stack_trace("Failed to apply preloaded data to [instance] ([path]) at ([x],[y],[z]): [e]")
+			GLOB._preloader.reset()
 
 	return instance
 
@@ -451,23 +474,111 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 		if("map_json_data" in the_attributes)
 			json_ready = 1
 		GLOB.use_preloader = TRUE
-		attributes = the_attributes
+		// `the_attributes` is not a private, per-instance list - parse_grid()
+		// caches parsed model attribute lists in the `static` (server-lifetime,
+		// shared across every load, not just this one) modelCache and hands
+		// out the SAME list object to every atom that uses that model, here
+		// and in every future load that happens to reuse the same model text.
+		// load() below mutates this list in place (`attributes -= "..."`,
+		// which modifies a DM list in place rather than returning a copy) to
+		// strip out keys it's already consumed (map_json_data, saved_decals).
+		// Without copying here, the FIRST atom to use a given model
+		// permanently strips those keys from the shared cached list -
+		// corrupting every other atom (this load or a future one) that
+		// reuses the same model. Copy so mutations stay local to this atom.
+		attributes = the_attributes.Copy()
 		target_path = path
 
 /datum/dmm_suite/preloader/proc/load(atom/A)
 	if(json_ready)
 		var/json_data = dmm_decode(attributes["map_json_data"])
+		// Reverse the bracket-escaping done in writer.dm's check_attributes()
+		// before handing this off to json_decode() - see the comment there
+		// for why '[' / ']' need separate handling from dmm_encode/dmm_decode.
+		json_data = replacetext(json_data, "#?lsb;", "\[")
+		json_data = replacetext(json_data, "#?rsb;", "\]")
 		attributes -= "map_json_data"
 		try
 			A.deserialize(json_decode(json_data))
 		catch(var/exception/E)
-			stack_trace("Bad json data: '[json_data]'")
+			stack_trace("Bad json data on [A] ([A.type]): '[json_data]' -- exception: [E] (file: [E.file], line: [E.line])")
 			throw E
+
+	var/decal_json
+	if("saved_decals" in attributes)
+		decal_json = dmm_decode(attributes["saved_decals"])
+		decal_json = replacetext(decal_json, "#?lsb;", "\[")
+		decal_json = replacetext(decal_json, "#?rsb;", "\]")
+		attributes -= "saved_decals"
+
 	for(var/attribute in attributes)
 		var/value = attributes[attribute]
 		if(islist(value))
 			value = deepCopyList(value)
 		A.vars[attribute] = value
+
+	// Turf decals aren't a real var on the turf - "saved_decals" would just
+	// get silently dumped into A.vars[] as junk (or error) by the loop
+	// above, so it's pulled out separately and handled here instead.
+	//
+	// Dir used to be passed as the SECOND constructor arg
+	// (`new decal_type(T, decal_entry["dir"])`), relying on it reaching
+	// /obj/effect/turf_decal/Initialize()'s `_dir` parameter - exactly the
+	// same fragile path that lost `master_item` for nested
+	// /obj/item/storage/internal atoms (see persistence.dm / internal.dm):
+	// under deferred/batched atom init, extra constructor args beyond
+	// `loc` don't reliably survive to Initialize(). When `_dir` arrives
+	// null, Initialize() fell back to the atom's own freshly-defaulted
+	// `dir` (SOUTH) - every decal collapsed to the same rotation regardless
+	// of what was actually saved.
+	//
+	// Setting `.dir` on the returned reference right after new() doesn't
+	// work either: if Initialize() happens to run immediately (rather than
+	// deferred), it's already read `_dir || dir` and self-deleted
+	// (INITIALIZE_HINT_QDEL) before control even returns here - too late
+	// either way.
+	//
+	// `loc` is the one thing that survives regardless of deferred timing
+	// (see the master_item fix), so queue the intended dir on the turf
+	// itself and have Initialize() consume it from there instead of from
+	// its own constructor arg - see turf_decal.dm. FIFO order matches
+	// creation order for this batch (each decal is queued immediately
+	// before its own new() call, in order).
+	if(decal_json)
+		var/turf/T = A
+		if(istype(T))
+			// Defensive reset: whatever's currently in decal_save_list (and
+			// any leftover pending_decal_dirs from an interrupted previous
+			// attempt) gets thrown away before spawning this batch fresh.
+			// Without this, stale/duplicate entries can accumulate across
+			// successive loads onto the same turf - each extra stale entry
+			// throws off the FIFO pairing between newly-queued dirs and the
+			// decals actually being (re)spawned right now, which is a
+			// plausible source of both "decals keep coming back with the
+			// wrong rotation" and "fewer and fewer decals survive each
+			// generation".
+			T.decal_save_list = null
+			// Must be list(), NOT null: `null += <number>` in DM does
+			// ARITHMETIC (null treated as 0), not list append - only
+			// `null += <list>` promotes null to a list. decal_save_list
+			// above is fine because its RHS is always a list; this one's
+			// RHS is a bare number (decal_entry["dir"]), which silently
+			// summed all the queued dirs together into a single number
+			// instead of building a list - length() on that number then
+			// read as 0, so the queue always looked empty and every decal
+			// fell through to the default SOUTH fallback. This was the
+			// actual cause of "decals reset to base rotation".
+			T.pending_decal_dirs = list()
+			try
+				var/list/decals = json_decode(decal_json)
+				for(var/list/decal_entry in decals)
+					var/decal_type = text2path(decal_entry["type"])
+					if(decal_type)
+						T.pending_decal_dirs += decal_entry["dir"]
+						new decal_type(T)
+			catch(var/exception/E)
+				stack_trace("Bad saved_decals data: '[decal_json]' ([E])")
+
 	GLOB.use_preloader = FALSE
 
 // If the map loader fails, make this safe

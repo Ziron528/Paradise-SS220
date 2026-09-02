@@ -103,6 +103,14 @@ SUBSYSTEM_DEF(mapping)
 	log_startup_progress("We feel like [caves_theme.name] today...")
 	SSblackbox.record_feedback("text", "procgen_settings", 1, "[caves_theme_type]")
 
+	// Wipe map templates uploaded via the admin "Map Template - Upload" verb
+	// last round - they're only ever relevant within the round they were
+	// uploaded in (GLOB.map_templates is in-memory only and gets rebuilt from
+	// scratch here), so leftover .dmm files on disk are pure clutter.
+	if(fexists("data/uploaded_maps/"))
+		for(var/leftover in flist("data/uploaded_maps/"))
+			fdel("data/uploaded_maps/[leftover]")
+
 	// Load all Z level templates
 	preloadTemplates()
 
