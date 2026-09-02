@@ -78,3 +78,6 @@ USER_VERB(map_template_load_lazy, R_DEBUG, "Map template - Lazy Load", "Map temp
 		message_admins(SPAN_DANGER("Lazyloading [template.name] failed! You should report this as a bug."))
 		return
 	message_admins(SPAN_ADMINNOTICE("[key_name_admin(client)] has lazyloaded the map template ([template.name]) at [ADMIN_JMP(reserve.bottom_left_turf)]"))
+
+
+#undef SERVER_UPLOAD_DIR
