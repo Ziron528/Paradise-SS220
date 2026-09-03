@@ -600,12 +600,25 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 		throw EXCEPTION("Wrong argument to `area_path_to_real_area`")
 
 	if(!(A in area_list))
+		// Plain `new A` here never goes through the normal SSatoms.InitAtom()
+		// queue that regular map loading uses - which is the only thing
+		// that knows to call LateInitialize() when Initialize() returns
+		// INITIALIZE_HINT_LATELOAD (as /area/Initialize() does). Without
+		// it, whatever LateInitialize() sets up (lighting registration,
+		// going by the "always pitch dark until dynamic_lighting is
+		// manually toggled off and back on" symptom) never runs for areas
+		// created by the maploader. Call it ourselves right after creation.
+		var/area/newly_created
 		if(initial(A.there_can_be_many))
-			area_list[A] = new A
+			newly_created = new A
+			area_list[A] = newly_created
 		else
 			if(!GLOB.all_unique_areas[A])
-				GLOB.all_unique_areas[A] = new A // No locate here else it will find a subtype of the one we're looking for
+				newly_created = new A // No locate here else it will find a subtype of the one we're looking for
+				GLOB.all_unique_areas[A] = newly_created
 			area_list[A] = GLOB.all_unique_areas[A]
+		if(newly_created)
+			newly_created.LateInitialize()
 
 	return area_list[A]
 
