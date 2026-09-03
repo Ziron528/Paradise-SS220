@@ -1,4 +1,3 @@
-#define SERVER_UPLOAD_DIR "data/uploaded_maps/"
 USER_VERB(map_template_place, R_DEBUG, "Map template - Place", "Map template - Place", VERB_CATEGORY_DEBUG)
 	var/datum/map_template/template
 
@@ -46,7 +45,7 @@ USER_VERB(map_template_upload, R_DEBUG, "Map Template - Upload", "Map Template -
 	// round return truncated or empty content (empty containers, or a fully
 	// empty map_data string -> "Bad Map bounds" in reader.dm). Persist it to
 	// a real file on disk immediately and load everything from there instead.
-	var/upload_dir = SERVER_UPLOAD_DIR
+	var/upload_dir = "data/uploaded_maps/"
 	if(!fexists(upload_dir))
 		fdel(upload_dir) // clears out any stray non-directory file at that path
 	var/dest_path = "[upload_dir][time2text(world.realtime, "YYYY-MM-DD_hh-mm-ss")]_[map]"
@@ -78,6 +77,3 @@ USER_VERB(map_template_load_lazy, R_DEBUG, "Map template - Lazy Load", "Map temp
 		message_admins(SPAN_DANGER("Lazyloading [template.name] failed! You should report this as a bug."))
 		return
 	message_admins(SPAN_ADMINNOTICE("[key_name_admin(client)] has lazyloaded the map template ([template.name]) at [ADMIN_JMP(reserve.bottom_left_turf)]"))
-
-
-#undef SERVER_UPLOAD_DIR
