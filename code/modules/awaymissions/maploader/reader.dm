@@ -176,7 +176,6 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 		throw e
 
 	GLOB._preloader.reset()
-	qdel(LM)
 	if(bounds[MAP_MINX] == 1.#INF) // Shouldn't need to check every item
 		CRASH("Bad Map bounds in [fname], Min x: [bounds[MAP_MINX]], Min y: [bounds[MAP_MINY]], Min z: [bounds[MAP_MINZ]], Max x: [bounds[MAP_MAXX]], Max y: [bounds[MAP_MAXY]], Max z: [bounds[MAP_MAXZ]]")
 	else
@@ -189,7 +188,32 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 				// we do this after we load everything in. if we don't; we'll have weird atmos bugs regarding atmos adjacent turfs
 				T.AfterChange(TRUE, keep_cabling = TRUE)
 				CHECK_TICK
+
+			// Newly loaded/changed turfs routinely come out with no
+			// lighting_corner_NE/SE/SW/NW and lighting_object stuck in a
+			// stale state (confirmed via VV: all four corners null,
+			// lighting_corners_initialised FALSE) - always pitch dark until
+			// an admin manually edits the containing area's dynamic_lighting
+			// var via VV (which only works because /area/vv_edit_var()
+			// routes that specific edit through set_dynamic_lighting(),
+			// which rebuilds lighting for every turf in the area - but only
+			// actually does anything when the new value differs from the
+			// current one, hence needing two edits, e.g. 2->1->2). Do the
+			// same two-step toggle here in code, for every area this load
+			// touched, now that all of the map's turfs have actually been
+			// assigned to their areas (doing this earlier, e.g. right when
+			// each area gets created, would only see whichever handful of
+			// turfs happened to be assigned so far).
+			for(var/area_path in LM.area_list)
+				var/area/A = LM.area_list[area_path]
+				var/original_lighting = A.dynamic_lighting
+				var/other_lighting = (original_lighting == DYNAMIC_LIGHTING_DISABLED) ? DYNAMIC_LIGHTING_ENABLED : DYNAMIC_LIGHTING_DISABLED
+				A.set_dynamic_lighting(other_lighting)
+				A.set_dynamic_lighting(original_lighting)
+				CHECK_TICK
+		qdel(LM)
 		return bounds
+	qdel(LM)
 
 /**
  * Fill a given tile with its area/turf/objects/mobs
@@ -341,6 +365,19 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 		if(ispath(path, /turf))
 			T.ChangeTurf(path, defer_change = TRUE, keep_icon = FALSE, copy_existing_baseturf = FALSE)
 			instance = T
+			// Confirmed via VV on a freshly-loaded dark tile: all four
+			// lighting_corner_NE/SE/SW/NW were null and
+			// lighting_corners_initialised was FALSE. Corners are supposed to
+			// get lazily created by generate_missing_corners() whenever a
+			// light source comes into view (lighting_source.dm), but that
+			// isn't happening here for whatever reason (possibly turfs from
+			// this loader being considered opaque, or something else upstream
+			// we haven't chased down) - a real flashlight in the room never
+			// fixed it. generate_missing_corners() is idempotent (checks each
+			// corner before creating it) and is exactly the proc responsible
+			// for fixing this exact state, so just call it directly rather
+			// than relying on it happening on its own.
+			T.generate_missing_corners()
 		else
 			// Anything that isnt an area, init!
 			if(!ispath(path, /area))
@@ -600,14 +637,6 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 		throw EXCEPTION("Wrong argument to `area_path_to_real_area`")
 
 	if(!(A in area_list))
-		// Plain `new A` here never goes through the normal SSatoms.InitAtom()
-		// queue that regular map loading uses - which is the only thing
-		// that knows to call LateInitialize() when Initialize() returns
-		// INITIALIZE_HINT_LATELOAD (as /area/Initialize() does). Without
-		// it, whatever LateInitialize() sets up (lighting registration,
-		// going by the "always pitch dark until dynamic_lighting is
-		// manually toggled off and back on" symptom) never runs for areas
-		// created by the maploader. Call it ourselves right after creation.
 		var/area/newly_created
 		if(initial(A.there_can_be_many))
 			newly_created = new A
@@ -617,8 +646,6 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 				newly_created = new A // No locate here else it will find a subtype of the one we're looking for
 				GLOB.all_unique_areas[A] = newly_created
 			area_list[A] = GLOB.all_unique_areas[A]
-		if(newly_created)
-			newly_created.LateInitialize()
 
 	return area_list[A]
 
