@@ -219,7 +219,6 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 					CHECK_TICK
 		qdel(LM)
 		return bounds
-	qdel(LM)
 
 /**
  * Fill a given tile with its area/turf/objects/mobs

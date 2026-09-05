@@ -45,3 +45,6 @@
 
 /datum/buildmode_mode/save/change_settings(mob/user)
 	use_json = (tgui_alert(user, "Would you like to use json (Default is \"Yes\")?", "Save Format", list("Yes", "No")) == "Yes")
+
+
+// text.dm
