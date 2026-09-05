@@ -37,6 +37,7 @@
 	var/selected_category = DECAL_PAINTER_CATEGORY_STANDARD
 	/// When removal_mode is TRUE the decal painter will remove decals instead
 	var/removal_mode = FALSE
+	var/max_decals = 4
 	var/static/list/decal_blacklist = typecacheof(
 		list(
 			/obj/effect/turf_decal/raven,
