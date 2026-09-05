@@ -34,10 +34,17 @@
 
 /datum/painter/decal/remove_decals(atom/target)
 	var/turf/target_turf = get_turf(target)
+	if(!target_turf)
+		return
 	var/list/datum/element/decal/decals = target_turf.get_decals()
 	for(var/datum/element/decal/dcl in decals)
 		dcl.Detach(target)
 	target_turf.RemoveElement(/datum/element/decal)
+	// RemoveElement() above only detaches the live, in-world element - it
+	// never touched decal_save_list, so an erased decal kept coming back
+	// on every subsequent Save/Load forever. Clear the saved record too;
+	// this removes everything on the tile at once, matching the
+	// all-at-once semantics of RemoveElement(/datum/element/decal) above.
 	target_turf.decal_save_list = null
 
 
