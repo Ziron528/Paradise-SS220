@@ -50,7 +50,3 @@
 // storage_base.dm
 
 /obj/item/storage
-	/// Set by deserialize() below - lets Initialize() tell "not loaded from
-	/// saved data yet" apart from "loaded, and correctly ended up empty"
-	/// (both look like an empty `contents` otherwise).
-	var/deserialized = FALSE
