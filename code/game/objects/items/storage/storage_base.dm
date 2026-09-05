@@ -50,17 +50,19 @@
 
 	// Allow storage items of the same size to be put inside
 	var/allow_same_size = FALSE
+	// SS220 EDIT START
 	/// Set by deserialize() below - lets Initialize() tell "not loaded from
 	/// saved data yet" apart from "loaded, and correctly ended up empty"
 	/// (both look like an empty `contents` otherwise).
 	var/deserialized = FALSE
+	// SS220 EDIT END
 
 /obj/item/storage/Initialize(mapload)
 	. = ..()
 	can_hold = typecacheof(can_hold)
 	cant_hold = typecacheof(cant_hold) - typecacheof(cant_hold_override)
 
-	//SS220EDIT-Start
+	// SS220 EDIT START
 	// `deserialize()` (below) can run either before or after Initialize() -
 	// the order isn't consistent between mapload spawns (see the same race
 	// already fixed in suit_storage.dm). If deserialize() already ran,
@@ -72,9 +74,8 @@
 	// both look like an empty contents list. Track whether deserialize()
 	// actually ran instead, so a legitimately-empty loaded container stays
 	// empty instead of getting a fresh default item spawned into it.
-	if(!deserialized && !length(contents))
+	if(!deserialized && !length(contents)) // SS220 EDIT END
 		populate_contents()
-	//SS220EDIT-End
 
 	boxes = new /atom/movable/screen/storage()
 	boxes.name = "storage"

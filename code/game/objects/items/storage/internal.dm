@@ -5,7 +5,7 @@
 
 /obj/item/storage/internal/Initialize(mapload, obj/item/MI)
 	. = ..()
-	//SS220EDIT-Start
+	// SS220 EDIT START
 	// `MI` is passed as an extra new()/New() constructor argument (see the
 	// `new path(loc, loc)` calls that create this type). That works fine
 	// when Initialize() runs immediately from New(), but when atom init is
@@ -17,7 +17,7 @@
 	// ends up running, and is always the same master item we were created
 	// into - so fall back to it if MI didn't make it through.
 	master_item = MI || loc
-	//SS220EDIT-End
+	// SS220 EDIT END
 	loc = master_item
 	name = master_item.name
 
