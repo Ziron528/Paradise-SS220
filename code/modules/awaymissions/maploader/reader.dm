@@ -204,15 +204,22 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 			// assigned to their areas (doing this earlier, e.g. right when
 			// each area gets created, would only see whichever handful of
 			// turfs happened to be assigned so far).
-			for(var/area_path in LM.area_list)
-				var/area/A = LM.area_list[area_path]
-				var/original_lighting = A.dynamic_lighting
-				var/other_lighting = (original_lighting == DYNAMIC_LIGHTING_DISABLED) ? DYNAMIC_LIGHTING_ENABLED : DYNAMIC_LIGHTING_DISABLED
-				A.set_dynamic_lighting(other_lighting)
-				A.set_dynamic_lighting(original_lighting)
-				CHECK_TICK
+			//
+			// Gated on SSlighting.initialized for the same reason as the
+			// generate_missing_corners() call above - touching lighting
+			// before SSlighting's own one-time startup scan has run risks
+			// colliding with it later.
+			if(SSlighting.initialized)
+				for(var/area_path in LM.area_list)
+					var/area/A = LM.area_list[area_path]
+					var/original_lighting = A.dynamic_lighting
+					var/other_lighting = (original_lighting == DYNAMIC_LIGHTING_DISABLED) ? DYNAMIC_LIGHTING_ENABLED : DYNAMIC_LIGHTING_DISABLED
+					A.set_dynamic_lighting(other_lighting)
+					A.set_dynamic_lighting(original_lighting)
+					CHECK_TICK
 		qdel(LM)
 		return bounds
+	qdel(LM)
 
 /**
  * Fill a given tile with its area/turf/objects/mobs
@@ -376,7 +383,19 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 			// corner before creating it) and is exactly the proc responsible
 			// for fixing this exact state, so just call it directly rather
 			// than relying on it happening on its own.
-			T.generate_missing_corners()
+			//
+			// MUST be gated on SSlighting.initialized: if some map gets
+			// loaded through us before SSlighting's own one-time startup
+			// scan (create_all_lighting_objects(), which walks every turf
+			// in the world once) has run, this call jumps the gun and
+			// creates a lighting_object early - then SSlighting's own scan
+			// hits that same turf later and finds one already there
+			// ("a lighting object was assigned to a turf that already had
+			// a lighting object!"), exactly what broke the CI test run at
+			// server boot. Skip entirely until SSlighting has done its own
+			// setup - same guard already used nearby in ChangeTurf().
+			if(SSlighting.initialized)
+				T.generate_missing_corners()
 		else
 			// Anything that isnt an area, init!
 			if(!ispath(path, /area))
