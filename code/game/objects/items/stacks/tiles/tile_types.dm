@@ -17,7 +17,7 @@
 
 /obj/item/stack/tile/Initialize(mapload, new_amount, merge)
 	. = ..()
-	//SS220EDIT-Start
+	// SS220 EDIT START
 	// scatter_atom() randomizes pixel_x/pixel_y for a decorative "scattered"
 	// look - but it ran unconditionally, even for atoms spawned from a map
 	// (mapload=TRUE), including ones the maploader just restored with a
@@ -26,9 +26,8 @@
 	// offset - the "tile drifted to the center of the table" symptom. Only
 	// scatter tiles that are being created outside of a map load (crafted,
 	// dropped, vended, etc).
-	if(!mapload)
+	if(!mapload) // SS220 EDIT END
 		scatter_atom()
-	//SS220EDIT-End
 
 /obj/item/stack/tile/welder_act(mob/user, obj/item/I)
 	if(get_amount() < 4)

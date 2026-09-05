@@ -402,7 +402,7 @@
 /proc/dmm_encode(text)
 	// First, go through and nix out any of our escape sequences so we don't leave ourselves open to some escape sequence attack
 	// Some coder will probably despise me for this, years down the line
-	// SS220EDIT-Start
+	// // SS220 EDIT START
 	// Previously this (and the replacement loop below) used a hand-rolled
 	// findtext()+copytext() loop, slicing out and rebuilding the string one
 	// match at a time. That's a classic source of byte-vs-character offset
@@ -427,18 +427,19 @@
 	// makes this proc nuke its own caller's valid escaping into '_' -
 	// exactly what broke saved_decals right after that "improvement" was
 	// made.
+	// SS220 EDIT END
 	var/list/repl_chars = list("#?qt;", "#?lbr;", "#?rbr;")
 	for(var/char in repl_chars)
-		if(findtext(text, char))
+		if(findtext(text, char)) // SS220 EDIT
 			stack_trace("Bad string given to dmm encoder! [text]")
 			// Replace w/ underscore to prevent "&#3&#123;4;" from cheesing the radar
 			// Should probably also use canon text replacing procs
-			text = replacetext(text, char, "_")
+			text = replacetext(text, char, "_") // SS220 EDIT
 
 	// Then, replace characters as normal
 	var/list/repl_chars_2 = list("\"" = "#?qt;", "{" = "#?lbr;", "}" = "#?rbr;")
 	for(var/char in repl_chars_2)
-		text = replacetext(text, char, repl_chars_2[char])
+		text = replacetext(text, char, repl_chars_2[char]) // SS220 EDIT
 	return text
 
 
@@ -446,9 +447,9 @@
 	// Replace what we extracted above
 	var/list/repl_chars = list("#?qt;" = "\"", "#?lbr;" = "{", "#?rbr;" = "}")
 	for(var/char in repl_chars)
-		text = replacetext(text, char, repl_chars[char])
+		text = replacetext(text, char, repl_chars[char])// SS220 EDIT
 	return text
-//SS220EDIT-End
+
 //Checks if any of a given list of needles is in the haystack
 /proc/text_in_list(haystack, list/needle_list, start=1, end=0)
 	for(var/needle in needle_list)

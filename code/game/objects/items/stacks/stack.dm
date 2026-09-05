@@ -41,7 +41,7 @@
 	/// Whether this stack deletes itself when `amount` reaches 0.
 	var/destroy_upon_empty = TRUE
 
-//SS220EDIT-Start
+// SS220 EDIT START
 // The base list (color/dir/icon/icon_state/name/pixel_x/pixel_y) doesn't
 // include `amount` - in JSON save mode (the default) that meant `amount`
 // never made it into the saved data at all, and always came back as
@@ -50,8 +50,7 @@
 /obj/item/stack/vars_to_save()
 	. = ..()
 	. += "amount"
-//SS220EDIT-End
-
+// SS220 EDIT END
 /obj/item/stack/examine(mob/user)
 	. = ..()
 	if(!in_range(user, src))
