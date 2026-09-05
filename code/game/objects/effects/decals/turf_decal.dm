@@ -10,6 +10,7 @@
 	..()
 	. = INITIALIZE_HINT_QDEL
 	var/turf/T = loc
+	//SS220EDIT-Start
 	if(!istype(T))
 		CRASH("Turf decal initialized in an object/nullspace")
 
@@ -20,6 +21,7 @@
 
 	T.decal_save_list += list(list("type" = "[type]", "dir" = final_dir))
 	T.AddElement(/datum/element/decal, icon, icon_state, final_dir, layer, alpha, color, FALSE, decal_description)
+	//SS220EDIT-End
 
 /obj/effect/turf_decal/trimline
 	icon = 'icons/turf/trimline.dmi'

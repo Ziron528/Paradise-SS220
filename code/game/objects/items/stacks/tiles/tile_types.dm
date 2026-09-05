@@ -17,6 +17,7 @@
 
 /obj/item/stack/tile/Initialize(mapload, new_amount, merge)
 	. = ..()
+	//SS220EDIT-Start
 	// scatter_atom() randomizes pixel_x/pixel_y for a decorative "scattered"
 	// look - but it ran unconditionally, even for atoms spawned from a map
 	// (mapload=TRUE), including ones the maploader just restored with a
@@ -27,6 +28,7 @@
 	// dropped, vended, etc).
 	if(!mapload)
 		scatter_atom()
+	//SS220EDIT-End
 
 /obj/item/stack/tile/welder_act(mob/user, obj/item/I)
 	if(get_amount() < 4)

@@ -83,6 +83,7 @@ in their list
 	// they'll never attach to the mob. But if it's passed
 	// for everything, it'll break shit cause it gets passed random args.
 	//
+	//SS220EDIT-Start
 	// /obj/item/storage/internal has the exact same situation:
 	// Initialize(mapload, obj/item/MI) also eats the first arg as mapload,
 	// and needs a second, non-null arg for MI (master_item) - without it,
@@ -113,3 +114,4 @@ in their list
 	GLOB.use_preloader = prev_use_preloader
 	thing.deserialize(data)
 	return thing
+	//SS220EDIT-End

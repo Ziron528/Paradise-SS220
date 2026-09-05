@@ -6,6 +6,7 @@
 #define DMM_IGNORE_MOBS 	(DMM_IGNORE_NPCS | DMM_IGNORE_PLAYERS)
 #define DMM_USE_JSON 		(1<<5)
 
+//SS220EDIT-Start
 // json_encode() escapes any non-ASCII character as a \uXXXX sequence, but
 // BYOND's own json_decode() doesn't parse that escape form back - see the
 // comment where this is called in check_attributes() below for the runtime
@@ -28,6 +29,7 @@
 		result += copytext(text, i, i + 1)
 		i++
 	return result
+//SS220EDIT-End
 
 /datum/dmm_suite/proc/save_map(turf/t1, turf/t2, map_name = "", flags = 0)
 	// Check for illegal characters in file name... in a cheap way.
@@ -185,6 +187,7 @@
 			if((!issaved(A.vars[V])) || (A.vars[V] == initial(A.vars[V])))
 				continue
 
+			//SS220EDIT-Start
 			// `var_to_dmm` returns "" (or null) for types it can't serialize into
 			// DM literal syntax (lists, datum refs, etc). List vars in particular
 			// will ALWAYS look "changed from initial" because list equality in DM
@@ -197,6 +200,7 @@
 			if(!entry)
 				continue
 			attributes += entry
+
 	else
 		var/list/to_encode = A.serialize()
 		// We'll want to write out vars that are important to the editor
@@ -210,11 +214,13 @@
 				if(!entry)
 					continue
 				attributes += entry
+				//SS220EDIT-End
 
 		// Remove useless info
 		to_encode -= "type"
 		if(length(to_encode))
 			var/json_stuff = json_encode(to_encode)
+			//SS220EDIT-Start
 			// json_encode() escapes any non-ASCII character (Cyrillic names,
 			// etc) as a \uXXXX sequence - but BYOND's own json_decode()
 			// doesn't actually parse \uXXXX escapes back (confirmed via
@@ -267,7 +273,7 @@
 		return
 
 	return "{[jointext(attributes,"; ")]}"
-
+//SS220EDIT-End
 /datum/dmm_suite/proc/get_model_key(which, key_length)
 	var/list/key = list()
 	var/working_digit = which - 1
