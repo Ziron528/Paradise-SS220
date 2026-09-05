@@ -50,6 +50,10 @@
 
 	// Allow storage items of the same size to be put inside
 	var/allow_same_size = FALSE
+	/// Set by deserialize() below - lets Initialize() tell "not loaded from
+	/// saved data yet" apart from "loaded, and correctly ended up empty"
+	/// (both look like an empty `contents` otherwise).
+	var/deserialized = FALSE
 
 /obj/item/storage/Initialize(mapload)
 	. = ..()
