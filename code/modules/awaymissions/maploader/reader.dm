@@ -162,7 +162,6 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 			CHECK_TICK
 	catch(var/exception/e)
 		GLOB._preloader.reset()
-		//SS220EDIT-Start
 		// `dmmRegex` is `static` - shared across every load_map() call in the
 		// whole codebase (see dmm_suite.dm). Throwing out of the middle of
 		// the `while(dmmRegex.Find(...))` loop above (rather than letting a
@@ -174,7 +173,6 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 		// load attempt right after a first one that threw. Recreate it so
 		// the next call starts clean.
 		dmmRegex = new/regex({""(\[a-zA-Z]+)" = \\(((?:.|\n)*?)\\)\n(?!\t)|\\((\\d+),(\\d+),(\\d+)\\) = \\{"(\[a-zA-Z\n]*)"\\}"}, "g")
-		//SS220EDIT-End
 		throw e
 
 	GLOB._preloader.reset()
@@ -191,7 +189,6 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 				T.AfterChange(TRUE, keep_cabling = TRUE)
 				CHECK_TICK
 
-			//SS220EDIT-Start
 			// Newly loaded/changed turfs routinely come out with no
 			// lighting_corner_NE/SE/SW/NW and lighting_object stuck in a
 			// stale state (confirmed via VV: all four corners null,
@@ -215,14 +212,16 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 			if(SSlighting.initialized)
 				for(var/area_path in LM.area_list)
 					var/area/A = LM.area_list[area_path]
+					if(!A)
+						continue
 					var/original_lighting = A.dynamic_lighting
 					var/other_lighting = (original_lighting == DYNAMIC_LIGHTING_DISABLED) ? DYNAMIC_LIGHTING_ENABLED : DYNAMIC_LIGHTING_DISABLED
 					A.set_dynamic_lighting(other_lighting)
 					A.set_dynamic_lighting(original_lighting)
 					CHECK_TICK
 		qdel(LM)
-		//SS220EDIT-End
 		return bounds
+	qdel(LM)
 
 /**
  * Fill a given tile with its area/turf/objects/mobs
@@ -374,7 +373,6 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 		if(ispath(path, /turf))
 			T.ChangeTurf(path, defer_change = TRUE, keep_icon = FALSE, copy_existing_baseturf = FALSE)
 			instance = T
-			//SS220EDIT-Start
 			// Confirmed via VV on a freshly-loaded dark tile: all four
 			// lighting_corner_NE/SE/SW/NW were null and
 			// lighting_corners_initialised was FALSE. Corners are supposed to
@@ -400,14 +398,12 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 			// setup - same guard already used nearby in ChangeTurf().
 			if(SSlighting.initialized)
 				T.generate_missing_corners()
-			//SS220EDIT-End
 		else
 			// Anything that isnt an area, init!
 			if(!ispath(path, /area))
 				instance = new path(T) // first preloader pass
 
 	if(GLOB.use_preloader && instance) // second preloader pass, for those atoms that don't ..() in New()
-		//SS220EDIT-Start
 		// A single bad atom's saved data (e.g. corrupt/incompatible
 		// deserialize() data) used to be able to throw an exception all the
 		// way up through the whole load_map() loop, silently aborting the
@@ -421,7 +417,6 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 		catch(var/exception/e)
 			stack_trace("Failed to apply preloaded data to [instance] ([path]) at ([x],[y],[z]): [e]")
 			GLOB._preloader.reset()
-		//SS220EDIT-End
 
 	return instance
 
@@ -536,7 +531,6 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 		if("map_json_data" in the_attributes)
 			json_ready = 1
 		GLOB.use_preloader = TRUE
-		//SS220EDIT-Start
 		// `the_attributes` is not a private, per-instance list - parse_grid()
 		// caches parsed model attribute lists in the `static` (server-lifetime,
 		// shared across every load, not just this one) modelCache and hands
@@ -550,19 +544,16 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 		// corrupting every other atom (this load or a future one) that
 		// reuses the same model. Copy so mutations stay local to this atom.
 		attributes = the_attributes.Copy()
-		//SS220EDIT-End
 		target_path = path
 
 /datum/dmm_suite/preloader/proc/load(atom/A)
 	if(json_ready)
 		var/json_data = dmm_decode(attributes["map_json_data"])
-		//SS220EDIT-Start
 		// Reverse the bracket-escaping done in writer.dm's check_attributes()
 		// before handing this off to json_decode() - see the comment there
 		// for why '[' / ']' need separate handling from dmm_encode/dmm_decode.
 		json_data = replacetext(json_data, "#?lsb;", "\[")
 		json_data = replacetext(json_data, "#?rsb;", "\]")
-		//SS220EDIT-End
 		attributes -= "map_json_data"
 		try
 			A.deserialize(json_decode(json_data))
@@ -570,14 +561,12 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 			stack_trace("Bad json data on [A] ([A.type]): '[json_data]' -- exception: [E] (file: [E.file], line: [E.line])")
 			throw E
 
-	//SS220EDIT-Start
 	var/decal_json
 	if("saved_decals" in attributes)
 		decal_json = dmm_decode(attributes["saved_decals"])
 		decal_json = replacetext(decal_json, "#?lsb;", "\[")
 		decal_json = replacetext(decal_json, "#?rsb;", "\]")
 		attributes -= "saved_decals"
-	//SS220EDIT-End
 
 	for(var/attribute in attributes)
 		var/value = attributes[attribute]
@@ -585,7 +574,6 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 			value = deepCopyList(value)
 		A.vars[attribute] = value
 
-	//SS220EDIT-Start
 	// Turf decals aren't a real var on the turf - "saved_decals" would just
 	// get silently dumped into A.vars[] as junk (or error) by the loop
 	// above, so it's pulled out separately and handled here instead.
@@ -647,7 +635,7 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 						new decal_type(T)
 			catch(var/exception/E)
 				stack_trace("Bad saved_decals data: '[decal_json]' ([E])")
-//SS220EDIT-End
+
 	GLOB.use_preloader = FALSE
 
 // If the map loader fails, make this safe
@@ -669,7 +657,6 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 		throw EXCEPTION("Wrong argument to `area_path_to_real_area`")
 
 	if(!(A in area_list))
-		//SS220EDIT-Start
 		var/area/newly_created
 		if(initial(A.there_can_be_many))
 			newly_created = new A
@@ -679,7 +666,7 @@ GLOBAL_DATUM_INIT(_preloader, /datum/dmm_suite/preloader, new())
 				newly_created = new A // No locate here else it will find a subtype of the one we're looking for
 				GLOB.all_unique_areas[A] = newly_created
 			area_list[A] = GLOB.all_unique_areas[A]
-			//SS220EDIT-End
+
 	return area_list[A]
 
 /area/template_noop
