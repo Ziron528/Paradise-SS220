@@ -37,7 +37,7 @@ USER_VERB(map_template_upload, R_DEBUG, "Map Template - Upload", "Map Template -
 
 	var/timer = start_watch()
 	message_admins(SPAN_ADMINNOTICE("[key_name_admin(client)] has begun uploading a map template ([map])"))
-
+	//SS220EDIT-Start
 	// `map` here is a transient /file handle backed by the browser's upload
 	// (rsc cache), not a real on-disk path. Reading it repeatedly (which
 	// happens every time this template gets Lazy Loaded afterwards) is
@@ -64,6 +64,7 @@ USER_VERB(map_template_upload, R_DEBUG, "Map Template - Upload", "Map Template -
 		message_admins(SPAN_ADMINNOTICE("[key_name_admin(client)] has uploaded a map template ([map]). Took [stop_watch(timer)]s."))
 	else
 		to_chat(client, "Map template '[map]' failed to load properly")
+	//SS220EDIT-End
 
 USER_VERB(map_template_load_lazy, R_DEBUG, "Map template - Lazy Load", "Map template - Lazy Load", VERB_CATEGORY_DEBUG)
 	var/map = input(client, "Choose a Map Template to place on the lazy load map level.","Place Map Template") as null|anything in GLOB.map_templates

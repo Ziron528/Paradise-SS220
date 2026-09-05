@@ -4,6 +4,7 @@
 
 /obj/item/clothing/suit/storage/Initialize(mapload)
 	. = ..()
+	//SS220EDIT-Start
 	// `deserialize()` (see below) and `Initialize()` race against each
 	// other during map load - which one runs first is not consistent
 	// between spawns (deferred vs immediate atom init). If deserialize()
@@ -18,6 +19,7 @@
 	//   which is exactly the "duplicated inventory" symptom (both the
 	//   orphaned and the fresh one ending up populated/visible).
 	if(!istype(pockets))
+		//SS220EDIT-End
 		pockets = new pockets(src, src)
 		pockets.storage_slots = 2	//two slots
 		pockets.max_w_class = WEIGHT_CLASS_SMALL		//fit only pocket sized items
@@ -100,6 +102,7 @@
 	return data
 
 /obj/item/clothing/suit/storage/deserialize(list/data)
+	//SS220EDIT-Start
 	// `pockets` starts out as a raw type-path literal (see the var
 	// declaration above) and only becomes an actual instance in
 	// Initialize(). Atom init for mapload'ed atoms is deferred (see the
@@ -110,5 +113,6 @@
 	// map loader's broad try/catch around deserialize() then misreports as
 	// "Bad json data". Only qdel an actual instance.
 	if(!ispath(pockets))
+		//SS220EDIT-End
 		qdel(pockets)
 	pockets = list_to_object(data["pockets"], src)

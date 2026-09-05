@@ -402,7 +402,7 @@
 /proc/dmm_encode(text)
 	// First, go through and nix out any of our escape sequences so we don't leave ourselves open to some escape sequence attack
 	// Some coder will probably despise me for this, years down the line
-	//
+	// SS220EDIT-Start
 	// Previously this (and the replacement loop below) used a hand-rolled
 	// findtext()+copytext() loop, slicing out and rebuilding the string one
 	// match at a time. That's a classic source of byte-vs-character offset
@@ -448,7 +448,7 @@
 	for(var/char in repl_chars)
 		text = replacetext(text, char, repl_chars[char])
 	return text
-
+//SS220EDIT-End
 //Checks if any of a given list of needles is in the haystack
 /proc/text_in_list(haystack, list/needle_list, start=1, end=0)
 	for(var/needle in needle_list)
