@@ -246,3 +246,4 @@
 		var/datum/map_template/lazy/L = new lazy_type()
 
 		GLOB.map_templates[L.name] = L
+
