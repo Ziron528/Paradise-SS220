@@ -880,6 +880,24 @@
 	assemblytype = /obj/structure/door_assembly/multi_tile
 	paintable = FALSE
 
+/obj/machinery/door/airlock/multi_tile/Initialize(mapload)
+	// The base airlock Initialize() unconditionally overwrites dir via
+	// get_current_direction(), which scans nearby walls to guess the door's
+	// orientation. For multi-tile doors loaded from a .dmm the wall-scan
+	// frequently returns the wrong direction, causing update_bounds() to
+	// place the filler tile in the wrong direction and the door to visually
+	// shift one tile after Initialize().
+	//
+	// Save dir BEFORE calling ..(), then always restore it afterwards.
+	// We can't use `saved_dir != SOUTH` as a "was explicitly set" guard
+	// because SOUTH (dir=2) is also a valid real direction from the file -
+	// writer.dm just doesn't write it (it equals initial(dir)), so the
+	// preloader never restores it, and we still need to honour it here.
+	var/saved_dir = dir
+	. = ..()
+	dir = saved_dir
+	update_bounds()
+
 /obj/machinery/door/airlock/multi_tile/manual_rotation
 	manual_dir = TRUE
 
