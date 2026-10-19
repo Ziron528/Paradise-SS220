@@ -6,7 +6,7 @@
 	/// A string with authors of this modpack.
 	author = "Tetra_del"
 
-/datum/modpack/example/initialize()
+/datum/modpack/DoItAdmin/initialize()
 	. = ..()
 	#define ANNOUNCE_VIS_LIVING    (1 << 0)  // 1  — живые
 	#define ANNOUNCE_VIS_GHOSTS    (1 << 1)  // 2  — госты (мёртвые с клиентом)
@@ -17,8 +17,8 @@
 	#define ANNOUNCE_VIS_ALL       (ANNOUNCE_VIS_LIVING | ANNOUNCE_VIS_GHOSTS | ANNOUNCE_VIS_LOBBY | ANNOUNCE_VIS_SILICONS | ANNOUNCE_VIS_OBSERVERS)
 	#define ANNOUNCE_VIS_DEFAULT   (ANNOUNCE_VIS_LIVING | ANNOUNCE_VIS_GHOSTS)
 
-/datum/modpack/example/pre_initialize()
+/datum/modpack/DoItAdmin/pre_initialize()
 	. = ..()
 
-/datum/modpack/example/post_initialize()
+/datum/modpack/DoItAdmin/post_initialize()
 	. = ..()

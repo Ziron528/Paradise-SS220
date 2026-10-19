@@ -300,7 +300,9 @@
 /turf/MouseEntered(location, control, params)
 	. = ..()
 	buildmode_save_mouse_entered(src)
+	buildmode_area_edit_mouse_entered(src)
 
 /atom/movable/MouseEntered(location, control, params)
 	. = ..()
 	buildmode_save_mouse_entered(src)
+	buildmode_area_edit_mouse_entered(src)

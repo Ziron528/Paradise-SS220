@@ -3760,6 +3760,18 @@
 #include "code\tests\game_tests.dm"
 #include "interface\interface.dm"
 #include "interface\skin.dmf"
+
+// [ERP] Never_Forget ERP — волна 1
+#include "code\modules\erp\erp_defines.dm"
+#include "code\modules\erp\erp_mob_vars.dm"
+#include "code\modules\erp\erp_overrides.dm"
+#include "code\modules\erp\interactions\_interaction.dm"
+#include "code\modules\erp\interactions\interaction_mob.dm"
+#include "code\modules\erp\interactions\interactions_ss.dm"
+#include "code\modules\erp\interactions\interaction_menu_granter.dm"
+#include "code\modules\erp\interactions\acts_innocent.dm"
+
+
 // END_INCLUDE
 
 // SS220

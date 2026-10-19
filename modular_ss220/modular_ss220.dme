@@ -89,6 +89,7 @@
 #include "species/_species.dme"
 #include "speech_filter/_speech_filter.dme"
 #include "station_traits/_station_traits.dme"
+#include "temp_code/_temp_code.dme"
 #include "text_to_speech/_tts.dme"
 #include "title_screen/_title_screen.dme"
 #include "translations/_translations.dme"
