@@ -31,12 +31,11 @@
     last_genital = null
     last_lewd_datum = null
 
-// [ERP PORT] Оверрайд без proc/ — это переопределение. Ядерное тело (см. их living.dm:
-// мед-худ, strippable-элемент, сигналы) вызывается через ..() и полностью сохраняется.
+// [ERP PORT] Рандом льюд-статов — один раз на моба, при создании.
+// Грант меню здесь НЕ делаем: компонент требует parent.client в момент добавления
+// (контракт сэндовского компонента), а клиента на Initialize у моба ещё нет.
+// Грант переехал в erp_overrides.dm → /mob/Login.
 /mob/living/Initialize(mapload)
     . = ..()
     sexual_potency = rand(10, 25)
     lust_tolerance = rand(25, 200)
-    // [ERP PORT] Меню интеракций всем живым с рождения (в БМе это делал их слой).
-    // Снимает зависимость комбинации от того, открывал ли кто-то верб до неё.
-    AddComponent(/datum/component/interaction_menu_granter)

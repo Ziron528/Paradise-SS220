@@ -308,6 +308,9 @@
 		E.owner = H
 		E.add_limb_flags()
 
+	// === ERP PORT: выдача гениталий по фичам персонажа ===
+	H.give_genitals()
+
 /datum/species/proc/create_mutant_organs(mob/living/carbon/human/H)
 	var/obj/item/organ/internal/ears/ears = H.get_int_organ(/obj/item/organ/internal/ears)
 	if(ears)

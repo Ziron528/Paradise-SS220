@@ -53,14 +53,14 @@ export const MobInteraction = (props) => {
         <Section title="Цель">
           {target ? `Взаимодействие: ${user} → ${target}` + (isTargetSelf ? ' (на себя)' : '') : 'Цель не выбрана.'}
           {max_distance !== null && ` · Дистанция: ${max_distance}`}
-          {target_is_blacklisted && ' · ЦЕЛЬ В БЛЭКЛИСТЕ'}
+          {!!target_is_blacklisted && ' · ЦЕЛЬ В БЛЭКЛИСТЕ'}
         </Section>
         <Section title="Атрибуты">
           <Box bold mb="2px">
             Ты:
           </Box>
           <Box>{selfAttributes.join(' ')}</Box>
-          {theirAttributes && !isTargetSelf && (
+          {!!theirAttributes?.length && !isTargetSelf && (
             <>
               <Box bold mt="6px" mb="2px">
                 Цель:
@@ -102,7 +102,7 @@ export const MobInteraction = (props) => {
             <Button
               key={s}
               selected={s === auto_interaction_pace}
-              content={`${s}с`}
+              content={`${s / 10}с`}
               onClick={() => act('interaction_pace', { speed: s })}
             />
           ))}

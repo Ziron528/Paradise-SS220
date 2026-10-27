@@ -188,22 +188,25 @@
 #define FOAM_REACT_BEFORE_SPREAD	(1<<3)
 
 //Human Overlays Indexes/////////
-#define EYES_OVERLAY_LAYER		53
-#define MISC_LAYER				52 // Handles eye_shine() -> cybernetic eyes, specific eye traits.
-#define SPINES_LAYER			51
-#define SPINES_UNDERLIMBS_LAYER	50
-#define WING_LAYER				49
-#define WING_UNDERLIMBS_LAYER	48
-#define MUTANTRACE_LAYER		47
-#define TAIL_UNDERLIMBS_LAYER	46	//Tail split-rendering.
-#define LIMBS_LAYER				45
-#define MARKINGS_LAYER			44
-#define INTORGAN_LAYER			43
-#define UNDERWEAR_LAYER			42
-#define MUTATIONS_LAYER			41
-#define H_DAMAGE_LAYER			40
-#define UNIFORM_LAYER			39
-#define ID_LAYER				38
+#define EYES_OVERLAY_LAYER          56
+#define MISC_LAYER                  55 // Handles eye_shine() -> cybernetic eyes, specific eye traits.
+#define SPINES_LAYER                54
+#define SPINES_UNDERLIMBS_LAYER     53
+#define WING_LAYER                  52
+#define WING_UNDERLIMBS_LAYER       51
+#define MUTANTRACE_LAYER            50
+#define TAIL_UNDERLIMBS_LAYER       49      //Tail split-rendering.
+#define LIMBS_LAYER                 48
+#define MARKINGS_LAYER              47
+#define INTORGAN_LAYER              46
+#define GENITALS_BEHIND_LAYER       45      //ERP: виден голым; перекрывается бельём и одеждой
+#define UNDERWEAR_LAYER             44
+#define GENITALS_FRONT_LAYER        43      //ERP: над бельём, под формой ("Hidden by clothes")
+#define MUTATIONS_LAYER             42
+#define H_DAMAGE_LAYER              41
+#define UNIFORM_LAYER               40
+#define GENITALS_EXPOSED_LAYER      39      //ERP: поверх одежды ("Always visible" / exposed)
+#define ID_LAYER                    38
 #define HANDS_LAYER				37	//Exists to overlay hands over jumpsuits
 #define SHOES_LAYER				36
 #define L_FOOT_BLOOD_LAYER		35	// Blood overlay separation Left-Foot
@@ -241,7 +244,7 @@
 #define HALO_LAYER				3	//blood cult ascended halo, because there's currently no better solution for adding/removing
 #define FIRE_LAYER				2	//If you're on fire
 #define FROZEN_LAYER			1
-#define TOTAL_LAYERS			53
+#define TOTAL_LAYERS			56
 
 ///Access Region Codes///
 #define REGION_ALL			0

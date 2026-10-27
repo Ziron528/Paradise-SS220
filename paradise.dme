@@ -3765,6 +3765,9 @@
 #include "code\modules\erp\erp_defines.dm"
 #include "code\modules\erp\erp_mob_vars.dm"
 #include "code\modules\erp\erp_overrides.dm"
+
+#include "code\modules\erp\genital_base.dm"
+
 #include "code\modules\erp\interactions\_interaction.dm"
 #include "code\modules\erp\interactions\interaction_mob.dm"
 #include "code\modules\erp\interactions\interactions_ss.dm"

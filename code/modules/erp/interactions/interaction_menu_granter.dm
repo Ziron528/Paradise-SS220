@@ -30,7 +30,7 @@
         for(var/mob/living/L in view(clicker))
             if(L != clicker)
                 candidates += L
-        var/list/labels = list()
+        var/list/datum/labels = list()
         for(var/mob/living/L in candidates)
             var/label = L.name
             if(L == clicker)
@@ -51,7 +51,8 @@
     menu.open_menu(clicker, target)
 
 /datum/component/interaction_menu_granter
-	dupe_mode = COMPONENT_DUPE_UNIQUE
+    dupe_mode = COMPONENT_DUPE_UNIQUE // [ERP PORT] повторный грант (релогин/верб/VV) не плодит экземпляры
+    /// Открытые панели взаимодействия, по одной на цель
     var/list/panels = list()
     var/list/hidden_interactions = list()
     var/mob/living/auto_interaction_target
@@ -170,7 +171,9 @@
     .["user"] = self
     .["target"] = target
     .["selfAttributes"] = self.list_interaction_attributes(self)
-    .["user_is_blacklisted"] = SSinteractions.is_blacklisted(self)
+    // [ERP] Владелец меню как ЦЕЛЬ — важно только для актов "на себя" (USER_IS_TARGET),
+    // в волне 1 все они innocent. В волне 3 булевы заменятся на per-акт флаги.
+    .["user_is_blacklisted"] = SSinteractions.is_blacklisted(self, INTERACTION_CLASS_INNOCENT)
     if(target == self)
         .["theirAttributes"] = null
         .["target_has_active_player"] = null
@@ -180,7 +183,10 @@
         .["theirAttributes"] = target.list_interaction_attributes(self)
         .["target_has_active_player"] = target.ckey ? (target.client ? 2 : TRUE) : FALSE
         .["max_distance"] = get_dist(self, target)
-        .["target_is_blacklisted"] = SSinteractions.is_blacklisted(target)
+        // [ERP] Явный INNOCENT, а не "максимальный": если передать LEWD, у лисы
+        // посереют ВСЕ кнопки, включая глажку. Lewd-акты в волне 3 будут резаться
+        // уже в evaluate_target, а здесь появится per-акт флаг.
+        .["target_is_blacklisted"] = SSinteractions.is_blacklisted(target, INTERACTION_CLASS_INNOCENT)
     .["auto_interaction_pace"] = auto_interaction_pace
     .["is_auto_target_self"] = auto_interaction_target == self
     .["auto_interaction_target"] = auto_interaction_target

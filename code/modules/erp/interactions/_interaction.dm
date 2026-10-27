@@ -13,6 +13,9 @@
         . += "...обладает [mouth_is_free() ? "неприкрытым" : "прикрытым"] ртом."
 
 /datum/interaction
+
+    // [ERP] Класс акта: innocent (гладить, обнимать) или lewd. Влияет на блэклисты SSinteractions.
+    var/interaction_class = INTERACTION_CLASS_INNOCENT
     var/description
     var/simple_message
     var/simple_style = "notice"
@@ -43,7 +46,7 @@
     )
 
 /datum/interaction/proc/evaluate_user(mob/living/user, silent = TRUE, apply_cooldown = TRUE)
-    if(SSinteractions.is_blacklisted(user))
+    if(SSinteractions.is_blacklisted(user, interaction_class)) // [ERP] класс акта → lewd-блэклист учитывается
         return FALSE
     if(required_from_user & INTERACTION_REQUIRE_MOUTH)
         if(!user.has_mouth())
@@ -66,7 +69,7 @@
     return TRUE
 
 /datum/interaction/proc/evaluate_target(mob/living/user, mob/living/target, silent = TRUE)
-    if(SSinteractions.is_blacklisted(target))
+    if(SSinteractions.is_blacklisted(target, interaction_class)) // [ERP] класс акта → lewd-блэклист учитывается
         return FALSE
     if(!(interaction_flags & INTERACTION_FLAG_USER_IS_TARGET))
         if(user == target)

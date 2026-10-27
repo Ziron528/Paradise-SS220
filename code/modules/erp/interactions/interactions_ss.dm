@@ -12,22 +12,29 @@ PROCESSING_SUBSYSTEM_DEF(interactions)
     // - их животные живут в /mob/living/basic (butterfly/mouse/crab/cockroach/snake/lizard/bunny/penguin/possum и пр.)
     // - обезьяна — human-подтип
     // - BM-шные pickle/babyKiwi не существуют, выкинуты
+    // [ERP] ПОЛНЫЙ блэклист: никаких интеракций, ни невинных, ни lewd.
     VAR_PROTECTED/list/blacklisted_mobs = list(
         /mob/dead,
         /mob/camera,
         /mob/living/basic,
-        /mob/living/carbon/human/monkey,
+    )
+    // [ERP] LEWD-блэклист: невинные акты разрешены (погладить лису — святое),
+    // льюд — нет. В волне 3 сюда переедет /mob/living/basic (фауна) и, возможно,
+    // часть этого списка пересмотрится под фетиш-контент.
+    VAR_PROTECTED/list/blacklisted_mobs_lewd = list(
         /mob/living/simple_animal/pet,
+        /mob/living/carbon/human/monkey,
     )
     VAR_PROTECTED/initialized_blacklist
     var/list/interactions = list()
 
 /datum/controller/subsystem/processing/interactions/Initialize(timeofday)
-    prepare_interactions()
-    prepare_blacklisted_mobs()
-    . = ..()
-    to_chat(world, "<b>[LAZYLEN(interactions)] interactions loaded!</b>")
-    log_world("ERP interactions loaded: [LAZYLEN(interactions)]")
+	prepare_interactions()
+	prepare_blacklisted_mobs()
+	// [ERP PORT] БЕЗ ..(): базовый /datum/controller/subsystem/Initialize у Пары —
+	// трипвайр (subsystem.dm:280). SS-Initialize у Пары родителя не зовёт.
+	to_chat(world, "<b>[LAZYLEN(interactions)] interactions loaded!</b>")
+	log_world("ERP interactions loaded: [LAZYLEN(interactions)]")
 
 /datum/controller/subsystem/processing/interactions/stat_entry(msg)
     msg += "|🖐:[LAZYLEN(interactions)]|"
@@ -46,9 +53,15 @@ PROCESSING_SUBSYSTEM_DEF(interactions)
     blacklisted_mobs = typecacheof(blacklisted_mobs)
     initialized_blacklist = TRUE
 
-/datum/controller/subsystem/processing/interactions/proc/is_blacklisted(mob/living/creature)
+// [ERP] Дефолт класса = INNOCENT: старые вызовы без второго аргумента
+// безопасно проверяют только полный блэклист. В волне 3 сверю все вызовы.
+/datum/controller/subsystem/processing/interactions/proc/is_blacklisted(mob/living/creature, interaction_class = INTERACTION_CLASS_INNOCENT)
     if(isliving(creature) && creature.client)
         return FALSE
     if(!creature || !initialized_blacklist)
         return TRUE
-    return is_type_in_typecache(creature, blacklisted_mobs)
+    if(is_type_in_typecache(creature, blacklisted_mobs))
+        return TRUE
+    if(interaction_class >= INTERACTION_CLASS_LEWD && is_type_in_typecache(creature, blacklisted_mobs_lewd))
+        return TRUE
+    return FALSE
