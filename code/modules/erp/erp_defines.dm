@@ -152,7 +152,7 @@ GLOBAL_LIST_INIT(lewd_kiss_sounds, list(
 ///////////////////////
 // РАЗМЕРЫ И ФОРМЫ
 ///////////////////////
-#define DEF_VAGINA_SHAPE        "Human"
+#define DEF_VAGINA_SHAPE        "human"
 #define COCK_SIZE_DEF           6
 #define COCK_DIAMETER_RATIO_MAX 0.42
 #define COCK_DIAMETER_RATIO_DEF 0.25
@@ -160,7 +160,7 @@ GLOBAL_LIST_INIT(lewd_kiss_sounds, list(
 #define DEF_COCK_SHAPE          "human"
 #define BALLS_VOLUME_BASE       25
 #define BALLS_VOLUME_MULT       1
-#define DEF_BALLS_SHAPE         "Single"
+#define DEF_BALLS_SHAPE         "single"
 #define BALLS_SIZE_MIN          1
 #define BALLS_SIZE_DEF          2
 #define BALLS_SIZE_2            3
@@ -169,7 +169,7 @@ GLOBAL_LIST_INIT(lewd_kiss_sounds, list(
 #define BREASTS_VOLUME_BASE     50  // 50u на A-купа, 850u на HH
 #define BREASTS_VOLUME_MULT     1
 #define BREASTS_SIZE_DEF        "c" // lowercase: у спрайтов состояния в нижнем регистре
-#define DEF_BREASTS_SHAPE       "Pair"
+#define DEF_BREASTS_SHAPE       "pair"
 #define BUTT_SIZE_DEF           0
 #define BUTT_SIZE_MAX           8
 #define BELLY_SIZE_MIN          0

@@ -23,6 +23,9 @@
 	//alt heads
 	init_sprite_accessory_subtypes(/datum/sprite_accessory/alt_heads, GLOB.alt_heads_list)
 
+	// ERP PORT: формы гениталий (ключ lowertext(name), значения — датум-инстансы)
+	init_erp_sprite_accessories()
+
 	init_subtypes(/datum/surgery_step, GLOB.surgery_steps)
 
 	// Different bodies
